@@ -1,0 +1,280 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[23]:
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.linear_model import SGDRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
+
+# In[24]:
+
+
+df.head()
+
+
+# In[25]:
+
+
+def dataoveriew(df, message):
+    print(f'{message}:\n')
+    print("Rows:", df.shape[0])
+    print("\nNumber of features:", df.shape[1])
+    print("\nFeatures:")
+    print(df.columns.tolist())
+    print("\nMissing values:", df.isnull().sum().values.sum())
+    print("\nUnique values:")
+    print(df.nunique())
+
+
+# In[26]:
+
+
+dataoveriew(df, 'Overiew of the training dataset')
+
+
+# In[27]:
+
+
+df.isna().sum()
+
+
+# In[28]:
+
+
+df.info()
+
+
+# In[29]:
+
+
+#genre, director, and actors values counts
+df['Genre'].value_counts()
+
+
+# In[30]:
+
+
+df['Director'].value_counts()
+
+
+# In[31]:
+
+
+df['Actor 1'].value_counts()
+
+
+# In[32]:
+
+
+df.head(10)
+
+
+# In[33]:
+
+
+# As we are going to predict movie ratings based on features, we need to remove null values from features that can directly influence the results.
+df.dropna(subset=['Name','Year','Duration','Votes','Rating'],inplace=True) 
+df.isna().sum()
+
+
+# In[34]:
+
+
+df.head()
+
+
+# In[35]:
+
+
+dataoveriew(df, 'Overiew of the training dataset')
+
+
+# In[36]:
+
+
+# Remove parentheses from 'Year' column and convert to integer
+df['Year'] = df['Year'].str.strip('()').astype(int)
+
+
+# In[37]:
+
+
+# Remove commas from 'Votes' column and convert to integer
+df['Votes'] = df['Votes'].str.replace(',', '').astype(int)
+
+
+# In[38]:
+
+
+# Remove min from 'Duration' column andDurationonvert to integer
+df['Duration'] = df['Duration'].str.replace('min', '').astype(int)
+
+
+# In[39]:
+
+
+df.info()
+
+
+# In[40]:
+
+
+df.describe()
+
+
+# In[41]:
+
+
+# Drop Genre column 
+df.drop('Genre',axis=1,inplace=True)
+
+
+# In[42]:
+
+
+df.head()
+
+
+# In[43]:
+
+
+plt.figure(figsize=(14,7))
+plt.subplot(2,2,1)
+sns.boxplot(x='Votes',data=df)
+
+plt.subplot(2,2,2)
+sns.distplot(df['Year'],color='g')
+
+plt.subplot(2,2,3)
+sns.distplot(df['Rating'],color='g')
+
+plt.subplot(2,2,4)
+sns.scatterplot(x=df['Duration'], y=df['Rating'], data=df)
+
+plt.tight_layout()
+plt.show()df.hist(figsize=(30, 15))
+None
+
+
+# In[44]:
+
+
+df.hist(figsize=(30, 15))
+None
+
+
+# In[49]:
+
+
+import pandas as pd
+
+# Replace non-numeric values with NaN
+df = df.apply(pd.to_numeric, errors='coerce')
+
+# Calculate the correlation matrix after handling non-numeric values
+corrmat = df.corr()
+
+# Now, create the heatmap
+fig = plt.figure(figsize=(20, 5))
+sns.heatmap(corrmat, vmax=0.8, square=True, annot=True)
+plt.show()
+
+
+# In[50]:
+
+
+df.head()
+
+
+# In[51]:
+
+
+df.drop(['Name','Director','Actor 1','Actor 2','Actor 3'], axis=1,inplace=True)
+df.head()
+
+
+# In[52]:
+
+
+X = df[['Year','Duration','Votes']]
+y = df['Rating']
+
+
+# In[53]:
+
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,random_state=1000)
+
+
+# In[54]:
+
+
+# Create a pipeline with standard scaling and SGD regression
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('sgd', SGDRegressor(max_iter=10000, random_state=1000))
+])
+
+
+# In[55]:
+
+
+pipeline.fit(X_train, y_train)
+
+
+# In[56]:
+
+
+# Predict ratings on the test set
+y_pred_pipeline = pipeline.predict(X_test)
+
+
+# In[57]:
+
+
+# Evaluation Metrics for the Pipeline
+mae_pipeline = mean_absolute_error(y_test, y_pred_pipeline)
+mse_pipeline = mean_squared_error(y_test, y_pred_pipeline)
+r2_pipeline = r2_score(y_test, y_pred_pipeline)
+
+
+# In[58]:
+
+
+print("Pipeline Mean Absolute Error:", mae_pipeline)
+print("Pipeline Mean Squared Error:", mse_pipeline)
+print("Pipeline R-squared:", r2_pipeline)
+
+
+# In[59]:
+
+
+# Take new user input for prediction
+new_input = pd.DataFrame({
+    'Year': [2023],          # Replace with the desired year
+    'Duration': [120],       # Replace with the desired duration in minutes
+    'Votes': [10000],        # Replace with the desired number of votes
+})
+
+# Use the trained pipeline to make predictions on the input
+predicted_rating = pipeline.predict(new_input)
+
+print("Predicted Rating:", predicted_rating)
+
+
+# In[ ]:
+
+
+
+
+
