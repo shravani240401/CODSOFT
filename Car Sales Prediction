@@ -1,0 +1,149 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[4]:
+
+
+pip install tensorflow
+
+
+# In[5]:
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
+from sklearn.model_selection import train_test_split
+
+import warnings
+warnings.filterwarnings("ignore")
+
+print ('modules loaded')
+
+
+# In[6]:
+
+
+df = pd.read_csv('car_purchasing.csv', encoding='ISO-8859-1')
+
+# Check the first few rows of the dataset
+print(df.head())
+
+
+# In[7]:
+
+
+df.drop(columns=['customer name', 'customer e-mail', 'country', 'gender'], inplace=True)
+
+
+# In[8]:
+
+
+X = df.drop('car purchase amount', axis=1)
+y = df['car purchase amount']
+
+
+# In[9]:
+
+
+scaler = MinMaxScaler()
+X = scaler.fit_transform(X)
+y = scaler.fit_transform(y.values.reshape(-1, 1))
+
+
+# In[10]:
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+print(X_train.shape)
+print(y_train.shape)
+print(X_test.shape)
+print(y_test.shape)
+
+
+# In[11]:
+
+
+model = Sequential()
+model.add(Dense(10, activation='relu', input_dim=4))
+model.add(Dense(10, activation='relu'))
+model.add(Dense(1, activation='linear'))
+
+model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_absolute_error'])
+model.summary()
+
+
+# In[12]:
+
+
+history = model.fit(X_train, y_train, epochs=50, validation_split=0.2)
+
+
+# In[13]:
+
+
+# Define needed variables
+tr_acc = history.history['mean_absolute_error']
+tr_loss = history.history['loss']
+val_acc = history.history['val_mean_absolute_error']
+val_loss = history.history['val_loss']
+index_loss = np.argmin(val_loss)
+val_lowest = val_loss[index_loss]
+index_acc = np.argmax(val_acc)
+acc_highest = val_acc[index_acc]
+Epochs = [i+1 for i in range(len(tr_acc))]
+loss_label = f'best epoch= {str(index_loss + 1)}'
+acc_label = f'best epoch= {str(index_acc + 1)}'
+
+# Plot training history
+plt.figure(figsize= (20, 8))
+plt.style.use('fivethirtyeight')
+
+plt.subplot(1, 2, 1)
+plt.plot(Epochs, tr_loss, 'r', label= 'Training loss')
+plt.plot(Epochs, val_loss, 'g', label= 'Validation loss')
+plt.scatter(index_loss + 1, val_lowest, s= 150, c= 'blue', label= loss_label)
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(Epochs, tr_acc, 'r', label= 'Training Accuracy')
+plt.plot(Epochs, val_acc, 'g', label= 'Validation Accuracy')
+plt.scatter(index_acc + 1 , acc_highest, s= 150, c= 'blue', label= acc_label)
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout
+plt.show()
+
+
+# In[14]:
+
+
+y_pred = model.predict(X_test)
+
+
+# In[15]:
+
+
+from sklearn.metrics import r2_score
+
+R2 = r2_score(y_test, y_pred)
+print("R2 Score=",R2 )
+
+
+# In[ ]:
+
+
+
+
+
